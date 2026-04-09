@@ -33,7 +33,7 @@ async function copy() {
     @click="copy"
     class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-all duration-200"
     :class="copied
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+      ? 'bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
       : 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)]'"
   >
     <span v-if="copied">✓ 已复制</span>

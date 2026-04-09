@@ -162,7 +162,11 @@ function downloadAsText() {
           转换中...
         </div>
 
-        <div v-else-if="error" class="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm sm:text-base">
+        <div
+          v-else-if="error"
+          class="p-4 rounded-xl border text-sm sm:text-base"
+          style="background: var(--color-danger-bg); border-color: var(--color-danger-border); color: var(--color-danger-text);"
+        >
           {{ error }}
         </div>
 

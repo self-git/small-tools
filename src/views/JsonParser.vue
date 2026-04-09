@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { nextTick, ref, computed } from 'vue'
+import VueJsonPretty from 'vue-json-pretty'
+import type { JSONDataType } from 'vue-json-pretty/types/utils'
+import 'vue-json-pretty/lib/styles.css'
 import ToolLayout from '@/components/ToolLayout.vue'
 import CopyButton from '@/components/CopyButton.vue'
 import { useJsonParse } from '@/composables/useJsonParse'
@@ -9,6 +12,11 @@ const {
   parse, toggleLayer, reset,
 } = useJsonParse()
 const autoParseError = ref('')
+
+/** vue-json-pretty 要求 JSONDataType，对 result.final 做类型断言 */
+const jsonData = computed<JSONDataType | undefined>(() =>
+  result.value?.final as JSONDataType | undefined
+)
 
 /** 示例数据：双重 stringify */
 const exampleData = JSON.stringify(JSON.stringify({ name: "测试", age: 20, tags: ["vue", "ts"], nested: JSON.stringify({ deep: true, items: [1, 2, 3] }) }))
@@ -87,19 +95,6 @@ function formatLayerOutput(output: unknown): string {
     return String(output)
   }
 }
-
-/** JSON 语法高亮 */
-function highlightJson(json: string): string {
-  return json
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"([^"\\]*(\\.[^"\\]*)*)"\s*:/g, '<span class="text-purple-600 dark:text-purple-400">"$1"</span>:')
-    .replace(/:\s*"([^"\\]*(\\.[^"\\]*)*)"/g, ': <span class="text-emerald-600 dark:text-emerald-400">"$1"</span>')
-    .replace(/:\s*(\d+\.?\d*)/g, ': <span class="text-amber-600 dark:text-amber-400">$1</span>')
-    .replace(/:\s*(true|false)/g, ': <span class="text-rose-600 dark:text-rose-400">$1</span>')
-    .replace(/:\s*(null)/g, ': <span class="text-gray-500">$1</span>')
-}
 </script>
 
 <template>
@@ -118,7 +113,7 @@ function highlightJson(json: string): string {
             </button>
             <button
               @click="onReset"
-              class="text-sm px-3 py-1.5 rounded-md text-[var(--color-text-secondary)] hover:text-red-500 border border-[var(--color-border)] hover:border-red-300 transition-colors"
+              class="text-sm px-3 py-1.5 rounded-md text-[var(--color-text-secondary)] hover:text-[var(--color-danger-text)] border border-[var(--color-border)] hover:border-[var(--color-danger-border)] transition-colors"
             >
               清空
             </button>
@@ -155,7 +150,8 @@ function highlightJson(json: string): string {
 
         <div
           v-if="autoParseError"
-          class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm"
+          class="p-3 rounded-lg border text-sm"
+          style="background: var(--color-warn-bg); border-color: var(--color-warn-border); color: var(--color-warn-text);"
         >
           {{ autoParseError }}
         </div>
@@ -170,7 +166,11 @@ function highlightJson(json: string): string {
 
         <template v-else>
           <!-- 错误信息 -->
-          <div v-if="result.error" class="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm sm:text-base">
+          <div
+            v-if="result.error"
+            class="p-4 rounded-xl border text-sm sm:text-base"
+            style="background: var(--color-danger-bg); border-color: var(--color-danger-border); color: var(--color-danger-text);"
+          >
             {{ result.error }}
           </div>
 
@@ -185,15 +185,23 @@ function highlightJson(json: string): string {
               </span>
             </div>
 
-            <!-- 最终结果 -->
+            <!-- 最终结果：vue-json-pretty 树形预览，支持虚拟滚动 -->
             <div class="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
-              <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center justify-between mb-2 gap-2">
                 <h3 class="text-base font-semibold text-[var(--color-text)]">最终结果</h3>
-                <CopyButton :text="formattedFinal" label="复制" />
+                <CopyButton :text="formattedFinal" label="复制 JSON" />
               </div>
-              <pre
-                class="text-sm font-mono max-h-64 overflow-auto leading-relaxed whitespace-pre-wrap break-all"
-                v-html="highlightJson(formattedFinal)"
+              <VueJsonPretty
+                :data="jsonData"
+                :deep="3"
+                :show-double-quotes="true"
+                :show-length="true"
+                :show-line="false"
+                :show-icon="true"
+                :collapsed-on-click-brackets="true"
+                :virtual="true"
+                :height="380"
+                :item-height="22"
               />
             </div>
 

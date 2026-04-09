@@ -114,7 +114,7 @@ onBeforeUnmount(() => {
     <p
       v-if="pasteTip"
       class="mt-2 text-sm"
-      :class="pasteStatus === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'"
+      :class="pasteStatus === 'success' ? 'text-[var(--color-success-muted)]' : 'text-[var(--color-warn-text)]'"
     >
       {{ pasteTip }}
     </p>
