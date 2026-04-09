@@ -20,7 +20,7 @@ const tools = [
 <template>
   <div>
     <div class="text-center mb-10">
-      <h1 class="text-3xl font-bold text-[var(--color-text)]">前端小工具集</h1>
+      <h1 class="text-3xl font-bold text-[var(--color-text)]">小工具集</h1>
       <p class="mt-2 text-[var(--color-text-secondary)]">日常开发中常用的效率工具，纯浏览器本地处理</p>
     </div>
 

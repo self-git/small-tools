@@ -29,7 +29,7 @@ function applyTheme() {
       <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3">
         <div class="flex items-center justify-between gap-3">
           <router-link to="/base64" class="text-lg sm:text-xl font-semibold text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors">
-            🧰 前端小工具集
+            🧰 小工具集
           </router-link>
           <button
             @click="toggleTheme"
