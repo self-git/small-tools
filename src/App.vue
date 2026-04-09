@@ -25,15 +25,19 @@ function applyTheme() {
 
 <template>
   <div class="min-h-screen">
-    <header class="sticky top-0 z-50 backdrop-blur-md bg-[var(--color-surface)]/90 border-b border-[var(--color-border)]">
+    <header class="sticky top-0 z-50 backdrop-blur-md bg-(--color-surface)/90 border-b border-(--color-border)">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3">
         <div class="flex items-center justify-between gap-3">
-          <router-link to="/base64" class="text-lg sm:text-xl font-semibold text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors">
+          <router-link
+            to="/base64"
+            class="text-lg sm:text-xl font-semibold text-(--color-text) cursor-pointer no-underline"
+          >
             🧰 小工具集
           </router-link>
           <button
+            type="button"
             @click="toggleTheme"
-            class="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-[var(--color-border)] transition-colors text-xl"
+            class="w-10 h-10 rounded-lg flex items-center justify-center text-(--color-text) text-xl transition-colors hover:bg-(--color-text)/10 dark:hover:bg-(--color-text)/15"
             :title="isDark ? '切换亮色' : '切换暗色'"
           >
             {{ isDark ? '☀️' : '🌙' }}
@@ -45,8 +49,8 @@ function applyTheme() {
             v-for="menu in toolMenus"
             :key="menu.route"
             :to="menu.route"
-            class="shrink-0 px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm sm:text-base text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-colors"
-            active-class="bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
+            class="shrink-0 px-4 py-2 rounded-lg border border-(--color-border) text-sm sm:text-base text-(--color-text-secondary) hover:text-(--color-primary) hover:border-(--color-primary) transition-colors"
+            active-class="bg-(--color-primary) text-white border-(--color-primary)"
           >
             {{ menu.name }}
           </router-link>

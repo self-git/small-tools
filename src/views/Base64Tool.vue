@@ -70,8 +70,8 @@ function downloadAsText() {
             @click="inputMode = m.key"
             class="px-4 py-2 text-sm sm:text-base rounded-lg transition-all"
             :class="inputMode === m.key
-              ? 'bg-[var(--color-primary)] text-white'
-              : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:border-[var(--color-primary)]'"
+              ? 'bg-(--color-primary) text-white'
+              : 'bg-(--color-surface) text-(--color-text-secondary) border border-(--color-border) hover:border-(--color-primary)'"
           >
             {{ m.label }}
           </button>
@@ -89,23 +89,23 @@ function downloadAsText() {
           <textarea
             v-model="svgInput"
             placeholder="在此粘贴 SVG 代码，例如：&#10;<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 100 100&quot;>&#10;  <circle cx=&quot;50&quot; cy=&quot;50&quot; r=&quot;40&quot; fill=&quot;#6366f1&quot;/>&#10;</svg>"
-            class="w-full h-44 px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm sm:text-base font-mono resize-y focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+            class="w-full h-44 px-4 py-3 rounded-xl border border-(--color-border) bg-(--color-surface) text-sm sm:text-base font-mono resize-y focus:outline-none focus:border-(--color-primary) transition-colors"
           />
           <button
             @click="onSvgConvert"
-            class="px-4 py-2 text-sm sm:text-base rounded-lg bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] transition-colors"
+            class="px-4 py-2 text-sm sm:text-base rounded-lg bg-(--color-primary) text-white hover:bg-(--color-primary-hover) transition-colors"
           >
             转换
           </button>
         </div>
 
         <!-- 转换选项（仅文件模式） -->
-        <div v-if="sourceType === 'file'" class="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-3">
-          <h3 class="text-base font-semibold text-[var(--color-text)]">转换选项</h3>
+        <div v-if="sourceType === 'file'" class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface) space-y-3">
+          <h3 class="text-base font-semibold text-(--color-text)">转换选项</h3>
 
           <!-- 输出格式 -->
           <div>
-            <label class="text-sm text-[var(--color-text-secondary)] mb-1.5 block">输出格式</label>
+            <label class="text-sm text-(--color-text-secondary) mb-1.5 block">输出格式</label>
             <div class="flex gap-2">
               <button
                 v-for="f in formatOptions"
@@ -113,8 +113,8 @@ function downloadAsText() {
                 @click="options.format = f.value"
                 class="px-3 py-1.5 text-sm rounded-md transition-all"
                 :class="options.format === f.value
-                  ? 'bg-[var(--color-primary)] text-white'
-                  : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'"
+                  ? 'bg-(--color-primary) text-white'
+                  : 'bg-(--color-bg) text-(--color-text-secondary) hover:text-(--color-text)'"
               >
                 {{ f.label }}
               </button>
@@ -123,7 +123,7 @@ function downloadAsText() {
 
           <!-- 质量精度 -->
           <div v-if="options.format !== 'image/png'">
-            <label class="text-sm text-[var(--color-text-secondary)] mb-1.5 block">
+            <label class="text-sm text-(--color-text-secondary) mb-1.5 block">
               质量精度：{{ Math.round(options.quality * 100) }}%
             </label>
             <input
@@ -132,13 +132,13 @@ function downloadAsText() {
               min="0.1"
               max="1"
               step="0.05"
-              class="w-full accent-[var(--color-primary)]"
+              class="w-full accent-(--color-primary)"
             />
           </div>
 
           <!-- 缩放比例 -->
           <div>
-            <label class="text-sm text-[var(--color-text-secondary)] mb-1.5 block">缩放比例</label>
+            <label class="text-sm text-(--color-text-secondary) mb-1.5 block">缩放比例</label>
             <div class="flex gap-2">
               <button
                 v-for="s in scaleOptions"
@@ -146,8 +146,8 @@ function downloadAsText() {
                 @click="options.scale = s.value"
                 class="px-3 py-1.5 text-sm rounded-md transition-all"
                 :class="options.scale === s.value
-                  ? 'bg-[var(--color-primary)] text-white'
-                  : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'"
+                  ? 'bg-(--color-primary) text-white'
+                  : 'bg-(--color-bg) text-(--color-text-secondary) hover:text-(--color-text)'"
               >
                 {{ s.label }}
               </button>
@@ -158,7 +158,7 @@ function downloadAsText() {
 
       <!-- 右侧：输出区 -->
       <div class="space-y-3">
-        <div v-if="loading" class="flex items-center justify-center h-40 text-[var(--color-text-secondary)] text-base">
+        <div v-if="loading" class="flex items-center justify-center h-40 text-(--color-text-secondary) text-base">
           转换中...
         </div>
 
@@ -172,9 +172,9 @@ function downloadAsText() {
 
         <template v-else-if="result">
           <!-- 预览 -->
-          <div class="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
-            <h3 class="text-base font-semibold text-[var(--color-text)] mb-3">预览</h3>
-            <div class="flex items-center justify-center p-4 rounded-lg bg-[var(--color-bg)] min-h-[120px]"
+          <div class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
+            <h3 class="text-base font-semibold text-(--color-text) mb-3">预览</h3>
+            <div class="flex items-center justify-center p-4 rounded-lg bg-(--color-bg) min-h-[120px]"
               style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22><rect width=%2210%22 height=%2210%22 fill=%22%23f0f0f0%22/><rect x=%2210%22 y=%2210%22 width=%2210%22 height=%2210%22 fill=%22%23f0f0f0%22/></svg>'); background-size: 20px 20px;">
               <img :src="result.base64" alt="preview" class="max-w-full max-h-64 object-contain" />
             </div>
@@ -182,16 +182,16 @@ function downloadAsText() {
 
           <!-- 信息 -->
           <div class="grid grid-cols-2 gap-3">
-            <div class="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
-              <div class="text-sm text-[var(--color-text-secondary)]">原始大小</div>
+            <div class="p-3 rounded-lg border border-(--color-border) bg-(--color-surface)">
+              <div class="text-sm text-(--color-text-secondary)">原始大小</div>
               <div class="text-base font-semibold mt-0.5">{{ formattedOriginalSize }}</div>
             </div>
-            <div class="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
-              <div class="text-sm text-[var(--color-text-secondary)]">编码后大小</div>
+            <div class="p-3 rounded-lg border border-(--color-border) bg-(--color-surface)">
+              <div class="text-sm text-(--color-text-secondary)">编码后大小</div>
               <div class="text-base font-semibold mt-0.5">{{ formattedEncodedSize }}</div>
             </div>
-            <div v-if="result.width" class="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
-              <div class="text-sm text-[var(--color-text-secondary)]">尺寸</div>
+            <div v-if="result.width" class="p-3 rounded-lg border border-(--color-border) bg-(--color-surface)">
+              <div class="text-sm text-(--color-text-secondary)">尺寸</div>
               <div class="text-base font-semibold mt-0.5">{{ result.width }} × {{ result.height }}</div>
             </div>
           </div>
@@ -203,20 +203,20 @@ function downloadAsText() {
             <CopyButton :text="cssBg" label="复制 CSS 背景" />
             <button
               @click="downloadAsText"
-              class="px-3 py-1.5 text-sm sm:text-base rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+              class="px-3 py-1.5 text-sm sm:text-base rounded-lg border border-(--color-border) text-(--color-text-secondary) hover:border-(--color-primary) hover:text-(--color-primary) transition-colors"
             >
               下载为文本
             </button>
           </div>
 
           <!-- Base64 文本 -->
-          <div class="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
-            <h3 class="text-base font-semibold text-[var(--color-text)] mb-2">Base64 编码</h3>
-            <pre class="text-sm font-mono break-all whitespace-pre-wrap max-h-44 overflow-y-auto text-[var(--color-text-secondary)] leading-relaxed">{{ result.base64 }}</pre>
+          <div class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
+            <h3 class="text-base font-semibold text-(--color-text) mb-2">Base64 编码</h3>
+            <pre class="text-sm font-mono break-all whitespace-pre-wrap max-h-44 overflow-y-auto text-(--color-text-secondary) leading-relaxed">{{ result.base64 }}</pre>
           </div>
         </template>
 
-        <div v-else class="flex flex-col items-center justify-center h-40 text-[var(--color-text-secondary)] text-sm sm:text-base">
+        <div v-else class="flex flex-col items-center justify-center h-40 text-(--color-text-secondary) text-sm sm:text-base">
           <span class="text-3xl mb-2">⬅️</span>
           上传图片、粘贴截图或输入 SVG 后查看结果
         </div>

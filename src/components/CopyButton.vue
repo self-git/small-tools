@@ -33,8 +33,8 @@ async function copy() {
     @click="copy"
     class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-all duration-200"
     :class="copied
-      ? 'bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
-      : 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)]'"
+      ? 'bg-(--color-success-bg) text-(--color-success-text)'
+      : 'bg-(--color-primary) text-white hover:bg-(--color-primary-hover)'"
   >
     <span v-if="copied">✓ 已复制</span>
     <span v-else>{{ label || '复制' }}</span>

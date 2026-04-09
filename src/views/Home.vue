@@ -20,8 +20,8 @@ const tools = [
 <template>
   <div>
     <div class="text-center mb-10">
-      <h1 class="text-3xl font-bold text-[var(--color-text)]">小工具集</h1>
-      <p class="mt-2 text-[var(--color-text-secondary)]">日常开发中常用的效率工具，纯浏览器本地处理</p>
+      <h1 class="text-3xl font-bold text-(--color-text)">小工具集</h1>
+      <p class="mt-2 text-(--color-text-secondary)">日常开发中常用的效率工具，纯浏览器本地处理</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
@@ -29,18 +29,18 @@ const tools = [
         v-for="tool in tools"
         :key="tool.route"
         :to="tool.route"
-        class="group p-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)] hover:shadow-lg hover:shadow-[var(--color-primary)]/5 transition-all duration-300"
+        class="group p-6 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:border-(--color-primary) hover:shadow-lg hover:shadow-(--color-primary)/5 transition-all duration-300"
       >
         <div class="text-4xl mb-4">{{ tool.icon }}</div>
-        <h2 class="text-lg font-semibold text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors">
+        <h2 class="text-lg font-semibold text-(--color-text) group-hover:text-(--color-primary) transition-colors">
           {{ tool.name }}
         </h2>
-        <p class="mt-1.5 text-sm text-[var(--color-text-secondary)] leading-relaxed">{{ tool.desc }}</p>
+        <p class="mt-1.5 text-sm text-(--color-text-secondary) leading-relaxed">{{ tool.desc }}</p>
         <div class="mt-3 flex flex-wrap gap-1.5">
           <span
             v-for="tag in tool.tags"
             :key="tag"
-            class="px-2 py-0.5 text-xs rounded-md bg-[var(--color-bg)] text-[var(--color-text-secondary)]"
+            class="px-2 py-0.5 text-xs rounded-md bg-(--color-bg) text-(--color-text-secondary)"
           >
             {{ tag }}
           </span>

@@ -95,10 +95,10 @@ onBeforeUnmount(() => {
     @paste="onPaste"
     @click="inputRef?.click()"
     tabindex="0"
-    class="relative border-2 border-dashed rounded-xl p-7 sm:p-8 text-center cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30"
+    class="relative border-2 border-dashed rounded-xl p-7 sm:p-8 text-center cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-(--color-primary)/30"
     :class="isDragOver
-      ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5'
-      : 'border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5'"
+      ? 'border-(--color-primary) bg-(--color-primary)/5'
+      : 'border-(--color-border) hover:border-(--color-primary) hover:bg-(--color-primary)/5'"
   >
     <input
       ref="inputRef"
@@ -108,13 +108,13 @@ onBeforeUnmount(() => {
       @change="onFileChange"
     />
     <div class="text-4xl mb-2">📁</div>
-    <p class="text-[var(--color-text-secondary)] text-sm sm:text-base">
-      拖拽文件到此处，或 <span class="text-[var(--color-primary)] font-medium">点击上传</span>，支持 <span class="font-medium">⌘V / Ctrl+V</span> 粘贴图片
+    <p class="text-(--color-text-secondary) text-sm sm:text-base">
+      拖拽文件到此处，或 <span class="text-(--color-primary) font-medium">点击上传</span>，支持 <span class="font-medium">⌘V / Ctrl+V</span> 粘贴图片
     </p>
     <p
       v-if="pasteTip"
       class="mt-2 text-sm"
-      :class="pasteStatus === 'success' ? 'text-[var(--color-success-muted)]' : 'text-[var(--color-warn-text)]'"
+      :class="pasteStatus === 'success' ? 'text-(--color-success-muted)' : 'text-(--color-warn-text)'"
     >
       {{ pasteTip }}
     </p>
