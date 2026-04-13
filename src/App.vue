@@ -5,6 +5,7 @@ const isDark = ref(false)
 const toolMenus = [
   { name: '图片转 Base64', route: '/base64' },
   { name: 'JSON 智能解析', route: '/json-parser' },
+  { name: '聊天预览', route: '/chat-preview' },
 ] as const
 
 onMounted(() => {

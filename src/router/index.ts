@@ -7,6 +7,7 @@ const router = createRouter({
     { path: '/', redirect: '/base64' },
     { path: '/base64', name: 'base64', component: () => import('@/views/Base64Tool.vue') },
     { path: '/json-parser', name: 'json-parser', component: () => import('@/views/JsonParser.vue') },
+    { path: '/chat-preview', name: 'chat-preview', component: () => import('@/views/ChatPreview.vue') },
   ],
 })
 
