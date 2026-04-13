@@ -101,7 +101,7 @@ function bubbleSurfaceClass(role: string) {
 
 <template>
   <ToolLayout
-    title="聊天预览"
+    title="AI聊天"
     desc="粘贴 SSE 风格日志（event: Message + JSON data），按 Role 合并同气泡，按 IsShow 决定是否拼接 Content"
   >
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
