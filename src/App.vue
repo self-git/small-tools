@@ -6,6 +6,7 @@ const toolMenus = [
   { name: '图片转 Base64', route: '/base64' },
   { name: 'JSON 智能解析', route: '/json-parser' },
   { name: 'AI聊天解析', route: '/chat-preview' },
+  { name: '工作流解析', route: '/workflow-parser' },
 ] as const
 
 onMounted(() => {
