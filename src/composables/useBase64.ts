@@ -14,6 +14,9 @@ export interface Base64Result {
   encodedSize: number
   width: number
   height: number
+  isImage: boolean
+  fileName: string
+  mimeType: string
 }
 
 function formatSize(bytes: number): string {
@@ -38,6 +41,7 @@ export function useBase64() {
   /** 当前加载的原始图片，用于选项变化时重新转换 */
   let currentImage: HTMLImageElement | null = null
   let currentOriginalSize = 0
+  let currentFileName = ''
 
   const formattedOriginalSize = computed(() =>
     result.value ? formatSize(result.value.originalSize) : ''
@@ -47,7 +51,7 @@ export function useBase64() {
   )
 
   /** 通过 Canvas 转换（支持格式/质量/缩放） */
-  function convertViaCanvas(img: HTMLImageElement, originalSize: number, opts: Base64Options): Base64Result {
+  function convertViaCanvas(img: HTMLImageElement, originalSize: number, opts: Base64Options, fileName: string): Base64Result {
     const w = Math.round(img.naturalWidth * opts.scale)
     const h = Math.round(img.naturalHeight * opts.scale)
     const canvas = document.createElement('canvas')
@@ -63,15 +67,19 @@ export function useBase64() {
       encodedSize: base64.length,
       width: w,
       height: h,
+      isImage: true,
+      fileName,
+      mimeType: opts.format,
     }
   }
 
-  /** 从文件转换 */
+  /** 从文件转换（仅图片） */
   function convertFile(file: File): Promise<void> {
     return new Promise((resolve, reject) => {
       loading.value = true
       error.value = null
       sourceType.value = 'file'
+      currentFileName = file.name
 
       const reader = new FileReader()
       reader.onload = () => {
@@ -79,7 +87,7 @@ export function useBase64() {
         img.onload = () => {
           currentImage = img
           currentOriginalSize = file.size
-          result.value = convertViaCanvas(img, file.size, options.value)
+          result.value = convertViaCanvas(img, file.size, options.value, file.name)
           loading.value = false
           resolve()
         }
@@ -96,6 +104,72 @@ export function useBase64() {
         reject(new Error(error.value))
       }
       reader.readAsDataURL(file)
+    })
+  }
+
+  /** 从任意文件转换 */
+  function convertAnyFile(file: File): Promise<void> {
+    return new Promise((resolve, reject) => {
+      loading.value = true
+      error.value = null
+      sourceType.value = 'file'
+      currentFileName = file.name
+
+      // 检查是否为图片类型
+      const isImage = file.type.startsWith('image/')
+
+      if (isImage) {
+        // 图片文件使用 Canvas 转换
+        const reader = new FileReader()
+        reader.onload = () => {
+          const img = new Image()
+          img.onload = () => {
+            currentImage = img
+            currentOriginalSize = file.size
+            result.value = convertViaCanvas(img, file.size, options.value, file.name)
+            loading.value = false
+            resolve()
+          }
+          img.onerror = () => {
+            error.value = '图片加载失败，请检查文件格式'
+            loading.value = false
+            reject(new Error(error.value))
+          }
+          img.src = reader.result as string
+        }
+        reader.onerror = () => {
+          error.value = '文件读取失败'
+          loading.value = false
+          reject(new Error(error.value))
+        }
+        reader.readAsDataURL(file)
+      } else {
+        // 非图片文件直接读取为 Base64
+        const reader = new FileReader()
+        reader.onload = () => {
+          const base64 = reader.result as string
+          result.value = {
+            base64,
+            originalSize: file.size,
+            encodedSize: base64.length,
+            width: 0,
+            height: 0,
+            isImage: false,
+            fileName: file.name,
+            mimeType: file.type || 'application/octet-stream',
+          }
+          currentImage = null
+          currentOriginalSize = file.size
+          loading.value = false
+          resolve()
+        }
+        reader.onerror = () => {
+          error.value = '文件读取失败'
+          loading.value = false
+          reject(new Error(error.value))
+        }
+        reader.readAsDataURL(file)
+      }
     })
   }
 
@@ -121,6 +195,9 @@ export function useBase64() {
       encodedSize: base64.length,
       width: 0,
       height: 0,
+      isImage: true,
+      fileName: 'svg-code',
+      mimeType: 'image/svg+xml',
     }
 
     const img = new Image()
@@ -136,7 +213,7 @@ export function useBase64() {
   /** 选项变更后重新转换（仅对 file 来源有效） */
   function reconvert() {
     if (currentImage && sourceType.value === 'file') {
-      result.value = convertViaCanvas(currentImage, currentOriginalSize, options.value)
+      result.value = convertViaCanvas(currentImage, currentOriginalSize, options.value, currentFileName)
     }
   }
 
@@ -156,6 +233,7 @@ export function useBase64() {
     sourceType.value = null
     currentImage = null
     currentOriginalSize = 0
+    currentFileName = ''
   }
 
   return {
@@ -169,6 +247,7 @@ export function useBase64() {
     imgTag,
     cssBg,
     convertFile,
+    convertAnyFile,
     convertSvgCode,
     reconvert,
     reset,

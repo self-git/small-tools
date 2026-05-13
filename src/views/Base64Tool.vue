@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import ToolLayout from '@/components/ToolLayout.vue'
 import FileDropZone from '@/components/FileDropZone.vue'
 import CopyButton from '@/components/CopyButton.vue'
@@ -9,16 +9,19 @@ import type { ImageFormat } from '@/composables/useBase64'
 const {
   result, loading, error, options, sourceType,
   formattedOriginalSize, formattedEncodedSize, imgTag, cssBg,
-  convertFile, convertSvgCode, reconvert, reset,
+  convertAnyFile, convertSvgCode, reconvert, reset,
 } = useBase64()
 
 /** 输入模式切换 */
 const inputMode = ref<'file' | 'svg'>('file')
 const svgInput = ref('')
 
+/** 当前文件是否是图片 */
+const isImageFile = computed(() => result.value?.isImage ?? false)
+
 function onFile(file: File) {
   reset()
-  convertFile(file)
+  convertAnyFile(file)
 }
 
 function onSvgConvert() {
@@ -58,7 +61,7 @@ function downloadAsText() {
 </script>
 
 <template>
-  <ToolLayout title="图片 / SVG → Base64" desc="上传图片、粘贴截图或输入 SVG 代码，转换为 Base64 编码，支持调整格式、质量和尺寸">
+  <ToolLayout title="文件 → Base64" desc="上传任意文件（图片、文本、音频等），转换为 Base64 编码，图片支持调整格式、质量和尺寸">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
       <!-- 左侧：输入区 -->
       <div class="space-y-3">
@@ -80,7 +83,7 @@ function downloadAsText() {
         <!-- 文件上传 -->
         <FileDropZone
           v-if="inputMode === 'file'"
-          accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+          accept="*/*"
           @file="onFile"
         />
 
@@ -99,8 +102,8 @@ function downloadAsText() {
           </button>
         </div>
 
-        <!-- 转换选项（仅文件模式） -->
-        <div v-if="sourceType === 'file'" class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface) space-y-3">
+        <!-- 转换选项（仅图片文件模式） -->
+        <div v-if="sourceType === 'file' && isImageFile" class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface) space-y-3">
           <h3 class="text-base font-semibold text-(--color-text)">转换选项</h3>
 
           <!-- 输出格式 -->
@@ -171,12 +174,27 @@ function downloadAsText() {
         </div>
 
         <template v-else-if="result">
-          <!-- 预览 -->
-          <div class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
+          <!-- 预览（仅图片） -->
+          <div v-if="result.isImage" class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
             <h3 class="text-base font-semibold text-(--color-text) mb-3">预览</h3>
             <div class="flex items-center justify-center p-4 rounded-lg bg-(--color-bg) min-h-[120px]"
               style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22><rect width=%2210%22 height=%2210%22 fill=%22%23f0f0f0%22/><rect x=%2210%22 y=%2210%22 width=%2210%22 height=%2210%22 fill=%22%23f0f0f0%22/></svg>'); background-size: 20px 20px;">
               <img :src="result.base64" alt="preview" class="max-w-full max-h-64 object-contain" />
+            </div>
+          </div>
+
+          <!-- 文件信息（非图片） -->
+          <div v-else class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
+            <h3 class="text-base font-semibold text-(--color-text) mb-3">文件信息</h3>
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-(--color-text-secondary)">文件名：</span>
+                <span class="text-sm font-medium">{{ result.fileName }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-(--color-text-secondary)">类型：</span>
+                <span class="text-sm font-medium">{{ result.mimeType }}</span>
+              </div>
             </div>
           </div>
 
@@ -199,8 +217,8 @@ function downloadAsText() {
           <!-- 操作按钮 -->
           <div class="flex flex-wrap gap-2">
             <CopyButton :text="result.base64" label="复制 Base64" />
-            <CopyButton :text="imgTag" label="复制 <img> 标签" />
-            <CopyButton :text="cssBg" label="复制 CSS 背景" />
+            <CopyButton v-if="result.isImage" :text="imgTag" label="复制 <img> 标签" />
+            <CopyButton v-if="result.isImage" :text="cssBg" label="复制 CSS 背景" />
             <button
               @click="downloadAsText"
               class="px-3 py-1.5 text-sm sm:text-base rounded-lg border border-(--color-border) text-(--color-text-secondary) hover:border-(--color-primary) hover:text-(--color-primary) transition-colors"
@@ -218,7 +236,7 @@ function downloadAsText() {
 
         <div v-else class="flex flex-col items-center justify-center h-40 text-(--color-text-secondary) text-sm sm:text-base">
           <span class="text-3xl mb-2">⬅️</span>
-          上传图片、粘贴截图或输入 SVG 后查看结果
+          上传任意文件或输入 SVG 代码后查看结果
         </div>
       </div>
     </div>

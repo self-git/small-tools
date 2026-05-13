@@ -2,9 +2,10 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const props = withDefaults(defineProps<{
-  accept: string
+  accept?: string
   enablePaste?: boolean
 }>(), {
+  accept: '*/*',
   enablePaste: true,
 })
 
