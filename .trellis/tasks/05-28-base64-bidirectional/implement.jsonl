@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Vue 3组件开发模式、props定义、事件处理等规范"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Composable函数开发模式、状态管理、错误处理等规范"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "代码质量标准、禁止模式、必需模式等规范"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "TypeScript类型安全规范、接口定义、类型导出等规范"}

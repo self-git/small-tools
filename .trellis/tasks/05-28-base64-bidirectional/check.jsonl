@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "检查组件代码是否符合Vue 3开发规范"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "检查composable代码是否符合开发规范"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "检查代码质量是否符合标准"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "检查TypeScript类型使用是否符合安全规范"}
