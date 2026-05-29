@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import ToolLayout from '@/components/ToolLayout.vue'
 import FileDropZone from '@/components/FileDropZone.vue'
 import CopyButton from '@/components/CopyButton.vue'
@@ -63,6 +63,13 @@ async function onDecode() {
   // Load image dimensions if it's an image
   const dims = await loadImageDimensions()
   decodeImageDimensions.value = dims
+}
+
+// 粘贴一大段内容时直接尝试解析，手动输入仍需点击按钮
+function onPaste() {
+  nextTick(() => {
+    if (base64Input.value.trim()) onDecode()
+  })
 }
 
 function switchMode(mode: 'file' | 'svg' | 'decode') {
@@ -153,6 +160,7 @@ function downloadAsText() {
             <label class="text-sm font-medium text-(--color-text)">Base64 字符串</label>
             <textarea
               v-model="base64Input"
+              @paste="onPaste"
               placeholder="在此粘贴 Base64 字符串，支持以下格式：&#10;• 完整格式：data:image/png;base64,iVBORw0KGgo...&#10;• 纯 Base64：iVBORw0KGgo...&#10;• 包含空格/换行符的 Base64"
               class="w-full h-44 px-4 py-3 rounded-xl border border-(--color-border) bg-(--color-surface) text-sm sm:text-base font-mono resize-y focus:outline-none focus:border-(--color-primary) transition-colors"
             />
@@ -183,7 +191,7 @@ function downloadAsText() {
             :disabled="decodeLoading || !base64Input.trim()"
             class="px-4 py-2 text-sm sm:text-base rounded-lg bg-(--color-primary) text-white hover:bg-(--color-primary-hover) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {{ decodeLoading ? '解码中...' : '解码并下载' }}
+            {{ decodeLoading ? '解码中...' : '解码' }}
           </button>
         </div>
 
@@ -274,13 +282,13 @@ function downloadAsText() {
             <div v-else class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
               <h3 class="text-base font-semibold text-(--color-text) mb-3">文件信息</h3>
               <div class="space-y-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm text-(--color-text-secondary)">文件名：</span>
-                  <span class="text-sm font-medium">{{ result.fileName }}</span>
+                <div class="flex items-start gap-2">
+                  <span class="text-sm text-(--color-text-secondary) shrink-0 whitespace-nowrap">文件名：</span>
+                  <span class="text-sm font-medium break-all">{{ result.fileName }}</span>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-sm text-(--color-text-secondary)">类型：</span>
-                  <span class="text-sm font-medium">{{ result.mimeType }}</span>
+                <div class="flex items-start gap-2">
+                  <span class="text-sm text-(--color-text-secondary) shrink-0 whitespace-nowrap">类型：</span>
+                  <span class="text-sm font-medium break-all">{{ result.mimeType }}</span>
                 </div>
               </div>
             </div>
@@ -358,17 +366,17 @@ function downloadAsText() {
             <div class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
               <h3 class="text-base font-semibold text-(--color-text) mb-3">文件信息</h3>
               <div class="space-y-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm text-(--color-text-secondary)">文件名：</span>
-                  <span class="text-sm font-medium">{{ decodeResult.fileName }}</span>
+                <div class="flex items-start gap-2">
+                  <span class="text-sm text-(--color-text-secondary) shrink-0 whitespace-nowrap">文件名：</span>
+                  <span class="text-sm font-medium break-all">{{ decodeResult.fileName }}</span>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-sm text-(--color-text-secondary)">类型：</span>
-                  <span class="text-sm font-medium">{{ decodeResult.mimeType }}</span>
+                <div class="flex items-start gap-2">
+                  <span class="text-sm text-(--color-text-secondary) shrink-0 whitespace-nowrap">类型：</span>
+                  <span class="text-sm font-medium break-all">{{ decodeResult.mimeType }}</span>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-sm text-(--color-text-secondary)">大小：</span>
-                  <span class="text-sm font-medium">{{ formatSize(decodeResult.size) }}</span>
+                <div class="flex items-start gap-2">
+                  <span class="text-sm text-(--color-text-secondary) shrink-0 whitespace-nowrap">大小：</span>
+                  <span class="text-sm font-medium break-all">{{ formatSize(decodeResult.size) }}</span>
                 </div>
               </div>
             </div>

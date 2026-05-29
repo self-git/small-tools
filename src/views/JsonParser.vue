@@ -1,17 +1,30 @@
 <script setup lang="ts">
-import { nextTick, ref, computed } from 'vue'
+import { nextTick, ref, computed, watch } from 'vue'
 import VueJsonPretty from 'vue-json-pretty'
 import type { JSONDataType } from 'vue-json-pretty/types/utils'
 import 'vue-json-pretty/lib/styles.css'
 import ToolLayout from '@/components/ToolLayout.vue'
 import CopyButton from '@/components/CopyButton.vue'
 import { useJsonParse } from '@/composables/useJsonParse'
+import { useJsonTreeSearch } from '@/composables/useJsonTreeSearch'
 
 const {
   input, maxDepth, result, expandedLayers, formattedFinal,
   parse, toggleLayer, reset,
 } = useJsonParse()
 const autoParseError = ref('')
+
+/** 包裹结果树的滚动容器，供搜索定位查询命中节点 */
+const treeWrapper = ref<HTMLElement | null>(null)
+const {
+  searchInput, matchCount, currentIndex, searchActive,
+  treeKey, treeDeep, treeVirtual,
+  onSearchKeydown, goNext, goPrev, clearSearch,
+  renderNodeKey, renderNodeValue,
+} = useJsonTreeSearch(treeWrapper)
+
+/** 重新解析（结果变化）时清空上一次搜索，避免命中状态错位 */
+watch(result, () => clearSearch())
 
 /** vue-json-pretty 要求 JSONDataType，对 result.final 做类型断言 */
 const jsonData = computed<JSONDataType | undefined>(() =>
@@ -175,34 +188,83 @@ function formatLayerOutput(output: unknown): string {
           </div>
 
           <template v-else>
-            <!-- 解析信息 -->
-            <div class="flex items-center gap-3">
-              <span class="px-3 py-1 rounded-full text-sm font-medium bg-(--color-primary)/10 text-(--color-primary)">
-                经过 {{ result.depth }} 层解析
-              </span>
-              <span class="text-sm text-(--color-text-secondary)">
-                最终类型：{{ typeof result.final === 'object' ? (Array.isArray(result.final) ? 'Array' : 'Object') : typeof result.final }}
-              </span>
+            <!-- 解析信息 + 结果树搜索 -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="px-3 py-1 rounded-full text-sm font-medium bg-(--color-primary)/10 text-(--color-primary)">
+                  经过 {{ result.depth }} 层解析
+                </span>
+                <span class="text-sm text-(--color-text-secondary)">
+                  最终类型：{{ typeof result.final === 'object' ? (Array.isArray(result.final) ? 'Array' : 'Object') : typeof result.final }}
+                </span>
+              </div>
+
+              <!-- 搜索：仅作用于下方最终结果树，回车定位、Shift+Enter 上一个、Esc 清空 -->
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="searchInput"
+                  @keydown="onSearchKeydown"
+                  type="text"
+                  placeholder="搜索 key / value，回车定位"
+                  class="w-44 sm:w-56 px-3 py-1.5 rounded-lg border border-(--color-border) bg-(--color-surface) text-sm focus:outline-none focus:border-(--color-primary) transition-colors"
+                />
+                <template v-if="searchActive">
+                  <span
+                    class="text-sm tabular-nums whitespace-nowrap"
+                    :class="matchCount ? 'text-(--color-text-secondary)' : 'text-(--color-danger-text)'"
+                  >
+                    {{ matchCount ? `${currentIndex + 1} / ${matchCount}` : '无匹配结果' }}
+                  </span>
+                  <button
+                    v-if="matchCount"
+                    @click="goPrev"
+                    title="上一个 (Shift+Enter)"
+                    class="px-2 py-1 rounded-md text-(--color-text-secondary) hover:text-(--color-primary) border border-(--color-border) hover:border-(--color-primary) transition-colors"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    v-if="matchCount"
+                    @click="goNext"
+                    title="下一个 (Enter)"
+                    class="px-2 py-1 rounded-md text-(--color-text-secondary) hover:text-(--color-primary) border border-(--color-border) hover:border-(--color-primary) transition-colors"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    @click="clearSearch"
+                    title="清空 (Esc)"
+                    class="px-2 py-1 rounded-md text-(--color-text-secondary) hover:text-(--color-danger-text) border border-(--color-border) hover:border-(--color-danger-border) transition-colors"
+                  >
+                    ✕
+                  </button>
+                </template>
+              </div>
             </div>
 
-            <!-- 最终结果：vue-json-pretty 树形预览，支持虚拟滚动 -->
+            <!-- 最终结果：vue-json-pretty 树形预览；搜索时关闭虚拟滚动并展开全部以定位命中 -->
             <div class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
               <div class="flex items-center justify-between mb-2 gap-2">
                 <h3 class="text-base font-semibold text-(--color-text)">最终结果</h3>
                 <CopyButton :text="formattedFinal" label="复制 JSON" />
               </div>
-              <VueJsonPretty
-                :data="jsonData"
-                :deep="3"
-                :show-double-quotes="true"
-                :show-length="true"
-                :show-line="false"
-                :show-icon="true"
-                :collapsed-on-click-brackets="true"
-                :virtual="true"
-                :height="380"
-                :item-height="22"
-              />
+              <div ref="treeWrapper" :class="searchActive ? 'max-h-[380px] overflow-auto' : ''">
+                <VueJsonPretty
+                  :key="treeKey"
+                  :data="jsonData"
+                  :deep="treeDeep"
+                  :show-double-quotes="true"
+                  :show-length="true"
+                  :show-line="false"
+                  :show-icon="true"
+                  :collapsed-on-click-brackets="true"
+                  :virtual="treeVirtual"
+                  :height="380"
+                  :item-height="22"
+                  :render-node-key="renderNodeKey"
+                  :render-node-value="renderNodeValue"
+                />
+              </div>
             </div>
 
             <!-- 每层解析过程 -->
@@ -236,3 +298,17 @@ function formatLayerOutput(output: unknown): string {
     </div>
   </ToolLayout>
 </template>
+
+<style>
+/* 命中高亮由 vue-json-pretty 子组件渲染，需用非 scoped 样式 */
+.jsp-hit {
+  background: var(--color-warn-bg);
+  color: var(--color-warn-text);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.jsp-hit-current {
+  background: var(--color-primary);
+  color: #fff;
+}
+</style>

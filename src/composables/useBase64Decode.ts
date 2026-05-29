@@ -55,6 +55,23 @@ const MIME_PREFIXES = [
   { prefix: 'data:application/zip;base64,', mime: 'application/zip' },
 ]
 
+/** 简单字符串哈希，用于从内容稳定派生随机数 */
+function hashString(input: string): number {
+  let hash = 0
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash * 31 + input.charCodeAt(i)) >>> 0
+  }
+  return hash
+}
+
+/** 生成 YYYYMMDD 格式日期戳 */
+function formatDateStamp(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}${m}${d}`
+}
+
 export function useBase64Decode() {
   const result = ref<DecodeResult | null>(null)
   const loading = ref(false)
@@ -76,13 +93,14 @@ export function useBase64Decode() {
   })
 
   // Computed: suggested filename based on MIME type
+  // base64 内容不携带原始文件名，用「内容派生随机位 + 日期戳」组成稳定文件名，如 78231_20260529
   const suggestedFileName = computed(() => {
     if (fileName.value) return fileName.value
-    if (detectedMime.value) {
-      const ext = MIME_EXTENSIONS[detectedMime.value] || '.bin'
-      return `decoded${ext}`
-    }
-    return 'decoded.bin'
+    const ext = detectedMime.value ? (MIME_EXTENSIONS[detectedMime.value] || '.bin') : '.bin'
+    const input = base64Input.value.trim()
+    const seed = input ? parseBase64Input(input).data : ''
+    const randomPart = String(hashString(seed) % 100000).padStart(5, '0')
+    return `${randomPart}_${formatDateStamp(new Date())}${ext}`
   })
 
   /**
