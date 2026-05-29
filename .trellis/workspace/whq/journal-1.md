@@ -38,3 +38,36 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: JsonParser 结果树搜索与体验优化
+
+**Date**: 2026-05-29
+**Task**: JsonParser 结果树搜索与体验优化
+**Branch**: `main`
+
+### Summary
+
+为 JsonParser 结果树新增搜索：新建 useJsonTreeSearch composable，用 vue-json-pretty 的 renderNodeKey/renderNodeValue 高亮命中(忽略大小写)，搜索时关闭虚拟滚动+展开全部以 DOM 定位；支持命中计数、Enter/Shift+Enter/Esc 导航与滚动定位。type-check 与生产构建通过。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `743ce32` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
