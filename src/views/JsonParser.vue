@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, computed, watch } from 'vue'
+import { nextTick, ref, computed, watch, h } from 'vue'
 import VueJsonPretty from 'vue-json-pretty'
 import type { JSONDataType } from 'vue-json-pretty/types/utils'
 import 'vue-json-pretty/lib/styles.css'
@@ -98,6 +98,24 @@ function scheduleParseAfterNativePaste() {
       syncAutoParseError()
     })
   })
+}
+
+/** 可展开节点（对象/数组）才挂复制按钮，复用 vue-json-pretty 内置 copy 复制该节点子数据 */
+const EXPANDABLE_NODE_TYPES = new Set(['objectStart', 'arrayStart', 'objectCollapsed', 'arrayCollapsed'])
+function renderNodeActions(opt: { node: { type: string }; defaultActions: { copy: () => void } }) {
+  if (!EXPANDABLE_NODE_TYPES.has(opt.node.type)) return null
+  return h(
+    'span',
+    {
+      class: 'jsp-copy-action',
+      title: '复制此节点',
+      onClick: (e: MouseEvent) => {
+        e.stopPropagation()
+        opt.defaultActions.copy()
+      },
+    },
+    '复制',
+  )
 }
 
 function formatLayerOutput(output: unknown): string {
@@ -263,6 +281,7 @@ function formatLayerOutput(output: unknown): string {
                   :item-height="22"
                   :render-node-key="renderNodeKey"
                   :render-node-value="renderNodeValue"
+                  :render-node-actions="renderNodeActions"
                 />
               </div>
             </div>
@@ -310,5 +329,29 @@ function formatLayerOutput(output: unknown): string {
 .jsp-hit-current {
   background: var(--color-primary);
   color: #fff;
+}
+
+/* 复制按钮：复用 vue-json-pretty 的 .vjs-tree-node-actions 定位（hover 行才显示），去掉其默认浅蓝底 */
+.vjs-tree .vjs-tree-node .vjs-tree-node-actions {
+  background: transparent;
+  padding: 0;
+}
+.jsp-copy-action {
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  opacity: 0.55;
+  user-select: none;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+}
+.jsp-copy-action:hover {
+  opacity: 1;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 </style>
