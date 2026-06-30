@@ -100,21 +100,54 @@ function scheduleParseAfterNativePaste() {
   })
 }
 
-/** 可展开节点（对象/数组）才挂复制按钮，复用 vue-json-pretty 内置 copy 复制该节点子数据 */
+/** 可展开节点（对象/数组）复用内置 copy 复制整段子数据；叶子节点复制 kv */
 const EXPANDABLE_NODE_TYPES = new Set(['objectStart', 'arrayStart', 'objectCollapsed', 'arrayCollapsed'])
-function renderNodeActions(opt: { node: { type: string }; defaultActions: { copy: () => void } }) {
-  if (!EXPANDABLE_NODE_TYPES.has(opt.node.type)) return null
+
+/** 写剪贴板：优先 navigator.clipboard，非安全上下文回退 execCommand（与 CopyButton 一致） */
+function writeClipboard(text: string) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).catch(() => fallbackCopy(text))
+    return
+  }
+  fallbackCopy(text)
+}
+function fallbackCopy(text: string) {
+  const ta = document.createElement('textarea')
+  ta.value = text
+  ta.style.position = 'fixed'
+  ta.style.opacity = '0'
+  document.body.appendChild(ta)
+  ta.select()
+  document.execCommand('copy')
+  document.body.removeChild(ta)
+}
+
+/** 叶子节点复制 "key":value（去除尾部标点）；数组元素无 key 时仅复制值 */
+function copyKv(node: { key?: string; content: unknown }) {
+  const kv =
+    node.key != null
+      ? `${JSON.stringify(node.key)}:${JSON.stringify(node.content)}`
+      : JSON.stringify(node.content)
+  writeClipboard(kv)
+}
+
+function renderNodeActions(opt: {
+  node: { type: string; key?: string; content: unknown }
+  defaultActions: { copy: () => void }
+}) {
+  const expandable = EXPANDABLE_NODE_TYPES.has(opt.node.type)
   return h(
     'span',
     {
       class: 'jsp-copy-action',
-      title: '复制此节点',
+      title: expandable ? '复制此节点' : '复制键值对',
       onClick: (e: MouseEvent) => {
         e.stopPropagation()
-        opt.defaultActions.copy()
+        if (expandable) opt.defaultActions.copy()
+        else copyKv(opt.node)
       },
     },
-    '复制',
+    expandable ? '复制' : '复制kv',
   )
 }
 
