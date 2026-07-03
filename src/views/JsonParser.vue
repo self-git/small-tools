@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, ref, computed, watch, h } from 'vue'
+import { Delete } from '@element-plus/icons-vue'
 import VueJsonPretty from 'vue-json-pretty'
 import type { JSONDataType } from 'vue-json-pretty/types/utils'
 import 'vue-json-pretty/lib/styles.css'
@@ -9,7 +10,7 @@ import { useJsonParse } from '@/composables/useJsonParse'
 import { useJsonTreeSearch } from '@/composables/useJsonTreeSearch'
 
 const {
-  input, maxDepth, result, expandedLayers, formattedFinal,
+  input, maxDepth, result, expandedLayers,
   parse, toggleLayer, reset,
 } = useJsonParse()
 const autoParseError = ref('')
@@ -23,13 +24,31 @@ const {
   renderNodeKey, renderNodeValue,
 } = useJsonTreeSearch(treeWrapper)
 
-/** 重新解析（结果变化）时清空上一次搜索，避免命中状态错位 */
-watch(result, () => clearSearch())
-
-/** vue-json-pretty 要求 JSONDataType，对 result.final 做类型断言 */
-const jsonData = computed<JSONDataType | undefined>(() =>
-  result.value?.final as JSONDataType | undefined
+/** 树的可编辑副本：从 result.final 深拷贝，行内删除只改这里，不回写 result / 输入框 */
+const jsonData = ref<JSONDataType | undefined>(undefined)
+/** 结果变化时重建可编辑副本并清空上一次搜索，避免命中状态错位 */
+watch(
+  result,
+  () => {
+    const final = result.value?.final
+    jsonData.value = final === undefined
+      ? undefined
+      : (JSON.parse(JSON.stringify(final)) as JSONDataType)
+    clearSearch()
+  },
+  { immediate: true },
 )
+
+/** 复制 JSON 跟随可编辑副本，保证与树展示一致 */
+const formattedTree = computed(() => {
+  const d = jsonData.value
+  if (d === undefined) return ''
+  try {
+    return JSON.stringify(d, null, 2)
+  } catch {
+    return String(d)
+  }
+})
 
 /** 示例数据：双重 stringify */
 const exampleData = JSON.stringify(JSON.stringify({ name: "测试", age: 20, tags: ["vue", "ts"], nested: JSON.stringify({ deep: true, items: [1, 2, 3] }) }))
@@ -48,6 +67,40 @@ function onManualParse() {
 function onReset() {
   autoParseError.value = ''
   reset()
+}
+
+/**
+ * 输入回退栈：paste 合并 / 加载示例 / 清空都是程序化赋值 input.value，
+ * 会破坏 textarea 原生 undo，这里自建历史快照（最多 20 份），Cmd/Ctrl+Z 回退。
+ */
+const INPUT_HISTORY_LIMIT = 20
+const inputHistory: string[] = []
+let suppressHistory = false
+let lastSnapshotAt = 0
+
+/** input 每次变化把旧值入栈；500ms 内的连续敲字合并为一个快照，避免逐字符占满 20 份 */
+watch(input, (_nv, ov) => {
+  if (suppressHistory) {
+    suppressHistory = false
+    return
+  }
+  const now = Date.now()
+  if (now - lastSnapshotAt < 500) return
+  lastSnapshotAt = now
+  inputHistory.push(ov)
+  if (inputHistory.length > INPUT_HISTORY_LIMIT) inputHistory.shift()
+})
+
+/** Cmd/Ctrl+Z：弹出上一份快照并重新解析，保证右侧结果与输入一致（空输入 parse 会清空结果） */
+function undoInput() {
+  const prev = inputHistory.pop()
+  if (prev === undefined) return
+  suppressHistory = true
+  input.value = prev
+  nextTick(() => {
+    parse()
+    syncAutoParseError()
+  })
 }
 
 /** 粘贴后同步解析结果与输入区错误提示 */
@@ -131,12 +184,41 @@ function copyKv(node: { key?: string; content: unknown }) {
   writeClipboard(kv)
 }
 
+/** 解析 vue-json-pretty 节点 path（rootPath 固定 'root'，形如 root.a["中文"][0]）为键序列 */
+function parseNodePath(path: string): (string | number)[] {
+  const rel = path.slice('root'.length)
+  const keys: (string | number)[] = []
+  const re = /\.([^.[\]]+)|\["([^"]*)"\]|\[(\d+)\]/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(rel)) !== null) {
+    if (m[1] !== undefined) keys.push(m[1])
+    else if (m[2] !== undefined) keys.push(m[2])
+    else if (m[3] !== undefined) keys.push(Number(m[3]))
+  }
+  return keys
+}
+
+/** 按节点 path 定位父容器并从可编辑副本移除该项：数组用 splice，对象用 delete */
+function deleteNode(node: { path: string }) {
+  const keys = parseNodePath(node.path)
+  if (keys.length === 0) return
+  let parent: unknown = jsonData.value
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (parent === null || typeof parent !== 'object') return
+    parent = (parent as Record<string, unknown>)[keys[i] as string]
+  }
+  if (parent === null || typeof parent !== 'object') return
+  const last = keys[keys.length - 1]
+  if (Array.isArray(parent) && typeof last === 'number') parent.splice(last, 1)
+  else delete (parent as Record<string, unknown>)[last as string]
+}
+
 function renderNodeActions(opt: {
-  node: { type: string; key?: string; content: unknown }
+  node: { type: string; key?: string; content: unknown; path: string }
   defaultActions: { copy: () => void }
 }) {
   const expandable = EXPANDABLE_NODE_TYPES.has(opt.node.type)
-  return h(
+  const copyBtn = h(
     'span',
     {
       class: 'jsp-copy-action',
@@ -149,6 +231,21 @@ function renderNodeActions(opt: {
     },
     expandable ? '复制' : '复制kv',
   )
+  // 根节点（path 为 rootPath 'root'）不提供删除，避免清空整棵树
+  if (opt.node.path === 'root') return [copyBtn]
+  const deleteBtn = h(
+    'span',
+    {
+      class: 'jsp-delete-action',
+      title: '删除此项',
+      onClick: (e: MouseEvent) => {
+        e.stopPropagation()
+        deleteNode(opt.node)
+      },
+    },
+    h(Delete),
+  )
+  return [copyBtn, deleteBtn]
 }
 
 function formatLayerOutput(output: unknown): string {
@@ -191,6 +288,8 @@ function formatLayerOutput(output: unknown): string {
           @paste="onInputPaste"
           @keydown.meta.enter.prevent="onManualParse"
           @keydown.ctrl.enter.prevent="onManualParse"
+          @keydown.meta.z.exact.prevent="undoInput"
+          @keydown.ctrl.z.exact.prevent="undoInput"
         />
 
         <div class="flex flex-wrap items-center gap-3">
@@ -297,7 +396,7 @@ function formatLayerOutput(output: unknown): string {
             <div class="p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
               <div class="flex items-center justify-between mb-2 gap-2">
                 <h3 class="text-base font-semibold text-(--color-text)">最终结果</h3>
-                <CopyButton :text="formattedFinal" label="复制 JSON" />
+                <CopyButton :text="formattedTree" label="复制 JSON" />
               </div>
               <div ref="treeWrapper" :class="searchActive ? 'max-h-[380px] overflow-auto' : ''">
                 <VueJsonPretty
@@ -369,11 +468,21 @@ function formatLayerOutput(output: unknown): string {
   background: transparent;
   padding: 0;
 }
+/* 仅 hover 行显示时用 flex 排布，保证两按钮竖直居中；默认仍走库的 display:none 隐藏 */
+.vjs-tree .vjs-tree-node:hover .vjs-tree-node-actions {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
 .jsp-copy-action {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  box-sizing: border-box;
   cursor: pointer;
   font-size: 11px;
   line-height: 1;
-  padding: 2px 7px;
+  padding: 0 7px;
   border-radius: 4px;
   color: var(--color-text-secondary);
   background: var(--color-bg);
@@ -386,5 +495,32 @@ function formatLayerOutput(output: unknown): string {
   opacity: 1;
   color: var(--color-primary);
   border-color: var(--color-primary);
+}
+/* 删除按钮：红色警告图标，放在复制按钮之后，默认即醒目 */
+.jsp-delete-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  box-sizing: border-box;
+  cursor: pointer;
+  padding: 0 5px;
+  margin-left: 5px;
+  border-radius: 4px;
+  color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  user-select: none;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+.jsp-delete-action svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+.jsp-delete-action:hover {
+  color: #fff;
+  background: var(--color-danger-text);
+  border-color: var(--color-danger-text);
 }
 </style>
