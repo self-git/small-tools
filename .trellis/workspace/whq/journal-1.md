@@ -71,3 +71,37 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: JSON 双份对比差异
+
+**Date**: 2026-07-17
+**Task**: JSON 双份对比差异
+**Branch**: `main`
+
+### Summary
+
+同步 Trellis 平台模板与运行时；新增 /json-compare 页面，支持 smartParse 双端对比、严格/宽松规则、差异列表筛选复制、双树联动高亮。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8bf0042` | (see git log) |
+| `ba27382` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
