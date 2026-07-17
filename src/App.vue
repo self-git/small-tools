@@ -7,6 +7,7 @@ const toolMenus = [
   { name: 'JSON 智能解析', route: '/json-parser' },
   { name: 'AI聊天解析', route: '/chat-preview' },
   { name: '工作流解析', route: '/workflow-parser' },
+  { name: 'JSON 对比', route: '/json-compare' },
 ] as const
 
 onMounted(() => {

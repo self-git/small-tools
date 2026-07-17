@@ -14,6 +14,13 @@ const tools = [
     route: '/json-parser',
     tags: ['JSON', '解析', '格式化'],
   },
+  {
+    name: 'JSON 对比',
+    desc: '粘贴两份 JSON，列出差异路径并高亮双树结构，支持严格 / 宽松规则',
+    icon: '⚖️',
+    route: '/json-compare',
+    tags: ['JSON', '对比', 'Diff'],
+  },
 ]
 </script>
 
